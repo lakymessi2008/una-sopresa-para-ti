@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Una sorpresa para ti</title>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07020d;--tx:#fff;--ac:#ff3d6e;--gl:rgba(20,6,30,.72);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:dark}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#07020d;--tx:#fff;--ac:#ff3d6e;--gl:rgba(20,6,30,.72)}}
+:root[data-theme="dark"]{--bg:#07020d;--tx:#fff;--ac:#ff3d6e;--gl:rgba(20,6,30,.72)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+canvas{position:fixed;inset:0;display:block;touch-action:none}
+.fancy{font-family:"Dancing Script",cursive,Georgia,serif}
+#ttl{position:fixed;left:0;right:0;top:calc(18px + env(safe-area-inset-top,0px));text-align:center;font-size:clamp(34px,9vw,60px);text-shadow:0 0 24px var(--ac);pointer-events:none;opacity:0;transition:opacity 1.5s}
+#msg{position:fixed;left:16px;right:16px;bottom:calc(70px + env(safe-area-inset-bottom,0px));text-align:center;font-size:clamp(22px,5.5vw,32px);line-height:1.3;text-shadow:0 2px 12px #000;pointer-events:none;min-height:3em}
+#edit{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));background:var(--gl);color:var(--tx);border:1px solid var(--ac);border-radius:99px;padding:10px 16px;font-size:14px;cursor:pointer;opacity:0;transition:opacity 1s}
+#card{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 50% 40%,rgba(255,61,110,.18),rgba(7,2,13,.92))}
+#card>div{width:100%;max-width:380px;background:var(--gl);border:1px solid var(--ac);border-radius:22px;padding:24px;backdrop-filter:blur(10px);box-shadow:0 0 40px rgba(255,61,110,.35)}
+#card h1{margin:0 0 14px;font-size:34px;text-align:center}
+#card input,#card textarea{width:100%;box-sizing:border-box;margin-bottom:12px;padding:13px;border-radius:12px;border:1px solid #5b3a64;background:#12061a;color:var(--tx);font-size:16px;font-family:inherit}
+#card textarea{height:90px;resize:none}
+#go{width:100%;padding:14px;border:0;border-radius:12px;background:var(--ac);color:#fff;font-size:17px;font-weight:700;cursor:pointer}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div id="ttl" class="fancy"></div>
+<div id="msg" class="fancy"></div>
+<button id="edit">✏️ Cambiar</button>
+<div id="card"><div>
+  <h1 class="fancy">Crea tu sorpresa ❤</h1>
+  <input id="nm" placeholder="Su nombre" maxlength="24">
+  <textarea id="tx" maxlength="160">Eres lo mejor que me ha pasado. Cada día contigo es mi favorito.</textarea>
+  <button id="go">Mostrar sorpresa</button>
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const R=new THREE.WebGLRenderer({antialias:true,alpha:true});
+R.setPixelRatio(Math.min(devicePixelRatio,2));R.setSize(innerWidth,innerHeight);document.body.prepend(R.domElement);
+const S=new THREE.Scene(),C=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,.1,200);C.position.set(0,0,9);
+S.add(new THREE.AmbientLight(0xffffff,.45));
+const L1=new THREE.PointLight(0xff3d6e,2.2,60);L1.position.set(6,5,8);S.add(L1);
+const L2=new THREE.PointLight(0x8a5cff,1.8,60);L2.position.set(-7,-3,6);S.add(L2);
+const L3=new THREE.DirectionalLight(0xffffff,.6);L3.position.set(0,6,10);S.add(L3);
+// corazón
+const pts=[];for(let i=0;i<120;i++){const t=i/120*Math.PI*2;pts.push(new THREE.Vector2(16*Math.pow(Math.sin(t),3),13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t)))}
+const sh=new THREE.Shape(pts);
+const gm=new THREE.ExtrudeGeometry(sh,{depth:5,bevelEnabled:true,bevelThickness:2.5,bevelSize:2,bevelSegments:8,curveSegments:48});
+gm.center();gm.scale(.1,.1,.1);
+const heart=new THREE.Mesh(gm,new THREE.MeshPhysicalMaterial({color:0xff2d55,roughness:.22,metalness:.15,clearcoat:1,clearcoatRoughness:.08,emissive:0x4a0012}));
+const G=new THREE.Group();G.add(heart);S.add(G);
+// aura de partículas con forma de corazón
+const N=1400,pa=new Float32Array(N*3);
+for(let i=0;i<N;i++){const t=Math.random()*Math.PI*2,k=1.25+Math.random()*.5;pa[i*3]=16*Math.pow(Math.sin(t),3)*.1*k+(Math.random()-.5)*.25;pa[i*3+1]=(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))*.1*k-.1+(Math.random()-.5)*.25;pa[i*3+2]=(Math.random()-.5)*1.8}
+const pg=new THREE.BufferGeometry();pg.setAttribute("position",new THREE.BufferAttribute(pa,3));
+const aura=new THREE.Points(pg,new THREE.PointsMaterial({color:0xff7aa2,size:.045,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false}));G.add(aura);
+// estrellas
+const sa=new Float32Array(1800*3);for(let i=0;i<sa.length;i++)sa[i]=(Math.random()-.5)*60;
+const sg=new THREE.BufferGeometry();sg.setAttribute("position",new THREE.BufferAttribute(sa,3));
+const stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:.06,transparent:true,opacity:.7}));S.add(stars);
+// pétalos
+const petals=[],pm=new THREE.MeshBasicMaterial({color:0xff5c8a,side:THREE.DoubleSide,transparent:true,opacity:.8});
+for(let i=0;i<45;i++){const p=new THREE.Mesh(new THREE.CircleGeometry(.12,10),pm);p.scale.set(1,1.6,1);p.position.set((Math.random()-.5)*16,Math.random()*14-7,(Math.random()-.5)*8);p.userData={v:.4+Math.random()*.6,r:Math.random()*2,s:Math.random()*6};S.add(p);petals.push(p)}
+// interacción
+let drag=false,moved=0,lx=0,ly=0,ry=0,rx=0,vy=.004;
+const cv=R.domElement;
+cv.addEventListener("pointerdown",e=>{drag=true;moved=0;lx=e.clientX;ly=e.clientY});
+addEventListener("pointermove",e=>{if(!drag)return;const dx=e.clientX-lx,dy=e.clientY-ly;moved+=Math.abs(dx)+Math.abs(dy);ry+=dx*.008;rx=Math.max(-.8,Math.min(.8,rx+dy*.006));lx=e.clientX;ly=e.clientY});
+addEventListener("pointerup",()=>{if(drag&&moved<8)burst();drag=false});
+const bursts=[];
+function burst(){const n=70,a=new Float32Array(n*3),v=[];for(let i=0;i<n;i++){const d=new THREE.Vector3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize().multiplyScalar(.03+Math.random()*.05);v.push(d)}
+  const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(a,3));
+  const m=new THREE.Points(g,new THREE.PointsMaterial({color:0xffc2d4,size:.09,transparent:true,opacity:1,blending:THREE.AdditiveBlending,depthWrite:false}));
+  m.userData={v,life:1};S.add(m);bursts.push(m)}
+// animación
+const clk=new THREE.Clock();
+function loop(){requestAnimationFrame(loop);const t=clk.getElapsedTime();
+  if(!drag)ry+=vy;G.rotation.y=ry;G.rotation.x=rx;
+  const b=1+.07*Math.pow(Math.max(0,Math.sin(t*3.2)),4);G.scale.setScalar(b);G.position.y=Math.sin(t*1.2)*.15;
+  aura.rotation.z=Math.sin(t*.5)*.05;stars.rotation.y=t*.01;
+  petals.forEach(p=>{p.position.y-=p.userData.v*.01;p.position.x+=Math.sin(t+p.userData.s)*.004;p.rotation.x+=.02;p.rotation.y+=.015;if(p.position.y<-8)p.position.y=8});
+  for(let i=bursts.length-1;i>=0;i--){const m=bursts[i],pa=m.geometry.attributes.position;m.userData.v.forEach((d,j)=>{pa.array[j*3]+=d.x;pa.array[j*3+1]+=d.y;pa.array[j*3+2]+=d.z});pa.needsUpdate=true;m.userData.life-=.012;m.material.opacity=m.userData.life;if(m.userData.life<=0){S.remove(m);bursts.splice(i,1)}}
+  R.render(S,C)}
+loop();
+addEventListener("resize",()=>{R.setSize(innerWidth,innerHeight);C.aspect=innerWidth/innerHeight;C.updateProjectionMatrix()});
+// textos
+let tw=null;
+function type(s){clearInterval(tw);const el=$("#msg");el.textContent="";let i=0;tw=setInterval(()=>{el.textContent=s.slice(0,++i);if(i>=s.length)clearInterval(tw)},55)}
+$("#go").onclick=()=>{const n=$("#nm").value.trim();$("#ttl").textContent=n?"Para ti, "+n+" ❤":"Para ti ❤";$("#ttl").style.opacity=1;$("#card").classList.add("hide");$("#edit").style.opacity=1;burst();type($("#tx").value.trim()||"Eres especial para mí.")};
+$("#edit").onclick=()=>{$("#card").classList.remove("hide")};
+</script>
+</body>
+</html>
